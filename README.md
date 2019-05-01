@@ -9,7 +9,14 @@ Added `--include-only-tickets-linked-by-type` cmd argument to be able to include
 Example of usage with docker:
 
 ```
-docker run -v $PWD/out:/out --rm jira python jira-dependency-graph.py --user=jirauser --password=jirapassword --jira=https://one-jira.pearson.com --include-only-tickets-linked-by-type 'is blocked by' --include-only-tickets-linked-by-type 'blocks' --exclude-link 'blocks' --ignore-subtasks --file=/out/output.png TASK-1 TASK-2 TASK-3 TASK-4
+docker run -v $PWD/out:/out --rm jira python jira-dependency-graph.py --user=jirauser --password=jirapassword --jira=https://one-jira.pearson.com --include-only-tickets-linked-by-type 'is blocked by' --include-only-tickets-linked-by-type 'blocks' --exclude-link 'is blocked by' --ignore-subtasks --file=/out/output.png TASK-1 TASK-2 TASK-3 TASK-4
+```
+Added displaing of ticket estimate. To see it we need to pass cmd argument `--estimate_field_name` with specifing jira field name that holds tickets estimate.
+
+Example of usage with docker:
+
+```
+docker run -v $PWD/out:/out --rm jira python jira-dependency-graph.py --user=jirauser --password=jirapassword --jira=https://one-jira.pearson.com --include-only-tickets-linked-by-type 'is blocked by' --include-only-tickets-linked-by-type 'is blocked by' --exclude-link 'blocks' --estimate_field_name 'customfield_10004' --ignore-subtasks --file=/out/output.png TASK-1 TASK-2 TASK-3 TASK-4
 ```
 
 # Original readme file:
