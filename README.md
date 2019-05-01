@@ -1,3 +1,19 @@
+# Base info:
+
+Forked from: https://github.com/pawelrychlik/jira-dependency-graph
+
+# Changes:
+
+Added `--include-only-tickets-linked-by-type` cmd argument to be able to include only tickes that are linked with specific link type. It can be useful when we plan sprint and want to see graph of sprint tickets with blockers (we are not interested in tickets that were cloned or are related, only blockers).
+
+Example of usage with docker:
+
+```
+docker run -v $PWD/out:/out --rm jira python jira-dependency-graph.py --user=jirauser --password=jirapassword --jira=https://one-jira.pearson.com --include-only-tickets-linked-by-type 'is blocked by' --include-only-tickets-linked-by-type 'blocks' --exclude-link 'blocks' --ignore-subtasks --file=/out/output.png TASK-1 TASK-2 TASK-3 TASK-4
+```
+
+# Original readme file:
+
 jira-dependency-graph
 =====================
 
