@@ -27,12 +27,17 @@ class JiraSearch(object):
 
     __base_url = None
 
-    def __init__(self, url, auth, no_verify_ssl):
+    def __init__(self, url, auth, no_verify_ssl, estimate_field_name=None):
         self.__base_url = url
         self.url = url + '/rest/api/latest'
         self.auth = auth
         self.no_verify_ssl = no_verify_ssl
-        self.fields = ','.join(['key', 'summary', 'status', 'description', 'issuetype', 'issuelinks', 'subtasks'])
+        fields = ['key', 'summary', 'status', 'description', 'issuetype', 'issuelinks', 'subtasks']
+
+        if estimate_field_name:
+            fields.append(estimate_field_name)
+
+        self.fields = ','.join(fields)
 
     def get(self, uri, params={}):
         headers = {'Content-Type' : 'application/json'}
@@ -62,7 +67,7 @@ class JiraSearch(object):
         return self.__base_url + '/browse/' + issue_key
 
 
-def build_graph_data(start_issue_key, jira, excludes, show_directions, directions, includes, ignore_closed, ignore_epic, ignore_subtasks, traverse, word_wrap, link_includes):
+def build_graph_data(start_issue_key, jira, excludes, show_directions, directions, includes, ignore_closed, ignore_epic, ignore_subtasks, traverse, word_wrap, link_includes, estimate_field_name):
     """ Given a starting image key and the issue-fetching function build up the GraphViz data representing relationships
         between issues. This will consider both subtasks and issue links.
     """
@@ -93,9 +98,13 @@ def build_graph_data(start_issue_key, jira, excludes, show_directions, direction
         summary = summary.replace('"', '\\"')
         # log('node ' + issue_key + ' status = ' + str(status))
 
+        estimate = '-'
+        if estimate_field_name and estimate_field_name in fields and fields[estimate_field_name] is not None:
+            estimate = fields[estimate_field_name]
+
         if islink:
-            return '"{}\\n({})"'.format(issue_key, summary.encode('utf-8'))
-        return '"{}\\n({})" [href="{}", fillcolor="{}", style=filled]'.format(issue_key, summary.encode('utf-8'), jira.get_issue_uri(issue_key), get_status_color(status))
+            return '"{}\\nEstimate: {}\\n({})"'.format(issue_key, estimate, summary.encode('utf-8'))
+        return '"{}\\nEstimate: {}\\n({})" [href="{}", fillcolor="{}", style=filled]'.format(issue_key, estimate, summary.encode('utf-8'), jira.get_issue_uri(issue_key), get_status_color(status))
 
     def process_link(fields, issue_key, link):
         if link.has_key('outwardIssue'):
@@ -140,7 +149,7 @@ def build_graph_data(start_issue_key, jira, excludes, show_directions, direction
             # log("Linked issue summary " + linked_issue['fields']['summary'])
             node = '{}->{}[label="{}"{}]'.format(
                 create_node_text(issue_key, fields),
-                create_node_text(linked_issue_key, linked_issue['fields']),
+                create_node_text(linked_issue_key, jira.get_issue(linked_issue_key)['fields']),
                 link_type, extra)
 
         return linked_issue_key, node
@@ -231,6 +240,7 @@ def parse_args():
     parser.add_argument('-c', '--cookie', dest='cookie', default=None, help='JSESSIONID session cookie value')
     parser.add_argument('-j', '--jira', dest='jira_url', default='http://jira.example.com', help='JIRA Base URL (with protocol)')
     parser.add_argument('-f', '--file', dest='image_file', default='issue_graph.png', help='Filename to write image to')
+    parser.add_argument('-efn', '--estimate_field_name', dest='estimate_field_name', default=None, help='Name of field that contains estimate')
     parser.add_argument('-l', '--local', action='store_true', default=False, help='Render graphviz code to stdout')
     parser.add_argument('-e', '--ignore-epic', action='store_true', default=False, help='Don''t follow an Epic into it''s children issues')
     parser.add_argument('-x', '--exclude-link', dest='excludes', default=[], action='append', help='Exclude link type(s)')
@@ -270,11 +280,11 @@ def main():
                     else getpass.getpass('Password: ')
         auth = (user, password)
 
-    jira = JiraSearch(options.jira_url, auth, options.no_verify_ssl)
+    jira = JiraSearch(options.jira_url, auth, options.no_verify_ssl, options.estimate_field_name)
 
     graph = []
     for issue in options.issues:
-        graph = graph + build_graph_data(issue, jira, options.excludes, options.show_directions, options.directions, options.includes, options.closed, options.ignore_epic, options.ignore_subtasks, options.traverse, options.word_wrap, options.link_includes)
+        graph = graph + build_graph_data(issue, jira, options.excludes, options.show_directions, options.directions, options.includes, options.closed, options.ignore_epic, options.ignore_subtasks, options.traverse, options.word_wrap, options.link_includes, options.estimate_field_name)
 
     if options.local:
         print_graph(filter_duplicates(graph), options.node_shape)
