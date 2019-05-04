@@ -75,11 +75,8 @@ def build_graph_data(start_issue_key, jira, excludes, show_directions, direction
         return issue['key']
 
     def get_status_color(status_field):
-        status = status_field['statusCategory']['name'].upper()
-        if status == 'IN PROGRESS':
-            return 'yellow'
-        elif status == 'DONE':
-            return 'green'
+        if 'colorName' in status_field['statusCategory']:
+            return status_field['statusCategory']['colorName']
         return 'white'
 
     def create_node_text(issue_key, fields, islink=True):
@@ -103,8 +100,15 @@ def build_graph_data(start_issue_key, jira, excludes, show_directions, direction
             estimate = fields[estimate_field_name]
 
         if islink:
-            return '"{}\\nEstimate: {}\\n({})"'.format(issue_key, estimate, summary.encode('utf-8'))
-        return '"{}\\nEstimate: {}\\n({})" [href="{}", fillcolor="{}", style=filled]'.format(issue_key, estimate, summary.encode('utf-8'), jira.get_issue_uri(issue_key), get_status_color(status))
+            return '"{}\\nEstimate: {}\\nStatus: {}\\n({})"'.format(issue_key, estimate,
+                                                                    status['name'],
+                                                                    summary.encode('utf-8'))
+        return '"{}\\nEstimate: {}\\nStatus: {}\\n({})" [href="{}", fillcolor="{}", style=filled]'.format(issue_key,
+                                                                                                          estimate,
+                                                                                                          status['name'],
+                                                                                                          summary.encode('utf-8'),
+                                                                                                          jira.get_issue_uri(issue_key),
+                                                                                                          get_status_color(status))
 
     def process_link(fields, issue_key, link):
         if link.has_key('outwardIssue'):
