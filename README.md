@@ -4,20 +4,26 @@ Forked from: https://github.com/pawelrychlik/jira-dependency-graph
 
 # Changes:
 
-Added `--include-only-tickets-linked-by-type` cmd argument to be able to include only tickes that are linked with specific link type. It can be useful when we plan sprint and want to see graph of sprint tickets with blockers (we are not interested in tickets that were cloned or are related, only blockers).
+Added more info about ticket to graph:
+* sprint name;
+* status;
+* estimate;
+* assignee.
+
+Added next cmd arguments:
+
+* `--include-only-tickets-linked-by-type` - include only tickes that are linked with specific link type. It can be useful when we plan sprint and want to see graph of sprint tickets with blockers (we are not interested in tickets that were cloned or are related, only blockers);
+* `--estimate_field_name` - specifies field name with estimate information;
+* `--sprint_field_name` - specifies field name with sprint information;
+
 
 Example of usage with docker:
 
 ```
-docker run -v $PWD/out:/out --rm jira python jira-dependency-graph.py --user=jirauser --password=jirapassword --jira=https://one-jira.pearson.com --include-only-tickets-linked-by-type 'is blocked by' --include-only-tickets-linked-by-type 'blocks' --exclude-link 'is blocked by' --ignore-subtasks --file=/out/output.png TASK-1 TASK-2 TASK-3 TASK-4
+docker run -v $PWD/out:/out --rm jira python jira-dependency-graph.py --user=jirauser --password=jirapassword --jira=https://one-jira.pearson.com --include-only-tickets-linked-by-type 'is blocked by' --include-only-tickets-linked-by-type 'blocks' --exclude-link 'is blocked by' --ignore-subtasks --word-wrap --estimate_field_name 'customfield_10004' --sprint_field_name 'customfield_10300' --file=/out/output.png TASK-1 TASK-2 TASK-3 TASK-4
 ```
-Added displaing of ticket estimate. To see it we need to pass cmd argument `--estimate_field_name` with specifing jira field name that holds tickets estimate.
 
-Example of usage with docker:
-
-```
-docker run -v $PWD/out:/out --rm jira python jira-dependency-graph.py --user=jirauser --password=jirapassword --jira=https://one-jira.pearson.com --include-only-tickets-linked-by-type 'is blocked by' --include-only-tickets-linked-by-type 'is blocked by' --exclude-link 'blocks' --estimate_field_name 'customfield_10004' --ignore-subtasks --file=/out/output.png TASK-1 TASK-2 TASK-3 TASK-4
-```
+To use above example please change next cmd arguments: `--user`, `--password` `--jira` and list of tickets in the end of command.
 
 # Original readme file:
 
