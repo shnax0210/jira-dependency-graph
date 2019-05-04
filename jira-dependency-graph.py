@@ -32,7 +32,7 @@ class JiraSearch(object):
         self.url = url + '/rest/api/latest'
         self.auth = auth
         self.no_verify_ssl = no_verify_ssl
-        fields = ['key', 'summary', 'status', 'description', 'issuetype', 'issuelinks', 'subtasks']
+        fields = ['key', 'summary', 'status', 'description', 'issuetype', 'issuelinks', 'subtasks', 'assignee']
 
         if estimate_field_name:
             fields.append(estimate_field_name)
@@ -75,9 +75,26 @@ def build_graph_data(start_issue_key, jira, excludes, show_directions, direction
         return issue['key']
 
     def get_status_color(status_field):
-        if 'colorName' in status_field['statusCategory']:
-            return status_field['statusCategory']['colorName']
+        status = status_field['statusCategory']['name'].upper()
+        if status == 'IN PROGRESS':
+            return 'yellow'
+        elif status == 'DONE':
+            return 'green'
         return 'white'
+
+    def get_estimate(fields):
+        estimate = '-'
+        if estimate_field_name and estimate_field_name in fields and fields[estimate_field_name] is not None:
+            estimate = fields[estimate_field_name]
+
+        return estimate
+
+    def get_assignee(fields):
+        assignee = '-'
+        if fields['assignee'] is not None and 'displayName' in fields['assignee']:
+            assignee = fields['assignee']['displayName']
+
+        return assignee
 
     def create_node_text(issue_key, fields, islink=True):
         summary = fields['summary']
@@ -95,18 +112,17 @@ def build_graph_data(start_issue_key, jira, excludes, show_directions, direction
         summary = summary.replace('"', '\\"')
         # log('node ' + issue_key + ' status = ' + str(status))
 
-        estimate = '-'
-        if estimate_field_name and estimate_field_name in fields and fields[estimate_field_name] is not None:
-            estimate = fields[estimate_field_name]
+        estimate = get_estimate(fields)
+        assignee = get_assignee(fields)
 
         if islink:
-            return '"{}\\nEstimate: {}\\nStatus: {}\\n({})"'.format(issue_key, estimate,
-                                                                    status['name'],
-                                                                    summary.encode('utf-8'))
-        return '"{}\\nEstimate: {}\\nStatus: {}\\n({})" [href="{}", fillcolor="{}", style=filled]'.format(issue_key,
+            return '"{}\\n({})\\nEstimate: {}\\nStatus: {}\\nAssignee: {}"'.format(issue_key, summary.encode('utf-8'),
+                                                                                   estimate, status['name'], assignee)
+        return '"{}\\n({})\\nEstimate: {}\\nStatus: {}\\nAssignee: {}" [href="{}", fillcolor="{}", style=filled]'.format(issue_key,
+                                                                                                          summary.encode('utf-8'),
                                                                                                           estimate,
                                                                                                           status['name'],
-                                                                                                          summary.encode('utf-8'),
+                                                                                                          assignee,
                                                                                                           jira.get_issue_uri(issue_key),
                                                                                                           get_status_color(status))
 
