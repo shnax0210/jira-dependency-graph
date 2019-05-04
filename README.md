@@ -20,7 +20,7 @@ Added next cmd arguments:
 Example of usage with docker:
 
 ```
-docker run -v $PWD/out:/out --rm jira python jira-dependency-graph.py --user=jirauser --password=jirapassword --jira=https://one-jira.pearson.com --include-only-tickets-linked-by-type 'is blocked by' --include-only-tickets-linked-by-type 'blocks' --exclude-link 'is blocked by' --ignore-subtasks --word-wrap --estimate_field_name 'customfield_10004' --sprint_field_name 'customfield_10300' --file=/out/output.png TASK-1 TASK-2 TASK-3 TASK-4
+docker run -v $PWD/out:/out --rm jira python jira-dependency-graph.py --user=jirauser --password=jirapassword --jira=https://jira.myproject.com --include-only-tickets-linked-by-type 'is blocked by' --include-only-tickets-linked-by-type 'blocks' --exclude-link 'is blocked by' --ignore-subtasks --word-wrap --estimate_field_name 'customfield_10004' --sprint_field_name 'customfield_10300' --file=/out/output.png TASK-1 TASK-2 TASK-3 TASK-4
 ```
 
 To use above example please change next cmd arguments: `--user`, `--password` `--jira` and list of tickets in the end of command.
