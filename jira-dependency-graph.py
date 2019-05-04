@@ -3,14 +3,11 @@
 from __future__ import print_function
 
 import argparse
-import json
 import sys
 import getpass
 import textwrap
 
 import requests
-
-from collections import OrderedDict
 
 
 GOOGLE_CHART_URL = 'http://chart.apis.google.com/chart'
@@ -27,12 +24,15 @@ class JiraSearch(object):
 
     __base_url = None
 
-    def __init__(self, url, auth, no_verify_ssl, estimate_field_name=None):
+    def __init__(self, url, auth, no_verify_ssl, sprint_field_name=None, estimate_field_name=None):
         self.__base_url = url
         self.url = url + '/rest/api/latest'
         self.auth = auth
         self.no_verify_ssl = no_verify_ssl
         fields = ['key', 'summary', 'status', 'description', 'issuetype', 'issuelinks', 'subtasks', 'assignee']
+
+        if sprint_field_name:
+            fields.append(sprint_field_name)
 
         if estimate_field_name:
             fields.append(estimate_field_name)
@@ -67,7 +67,7 @@ class JiraSearch(object):
         return self.__base_url + '/browse/' + issue_key
 
 
-def build_graph_data(start_issue_key, jira, excludes, show_directions, directions, includes, ignore_closed, ignore_epic, ignore_subtasks, traverse, word_wrap, link_includes, estimate_field_name):
+def build_graph_data(start_issue_key, jira, excludes, show_directions, directions, includes, ignore_closed, ignore_epic, ignore_subtasks, traverse, word_wrap, link_includes, sprint_field_name, estimate_field_name):
     """ Given a starting image key and the issue-fetching function build up the GraphViz data representing relationships
         between issues. This will consider both subtasks and issue links.
     """
@@ -81,6 +81,15 @@ def build_graph_data(start_issue_key, jira, excludes, show_directions, direction
         elif status == 'DONE':
             return 'green'
         return 'white'
+
+    def get_sprint(fields):
+        sprint = '-'
+        if sprint_field_name and sprint_field_name in fields and fields[sprint_field_name] is not None:
+            raw_sprint = fields[sprint_field_name][0]
+            raw_sprint = raw_sprint.split("name=", 1)[1]
+            sprint = raw_sprint.split(",", 1)[0]
+
+        return sprint
 
     def get_estimate(fields):
         estimate = '-'
@@ -114,14 +123,17 @@ def build_graph_data(start_issue_key, jira, excludes, show_directions, direction
 
         estimate = get_estimate(fields)
         assignee = get_assignee(fields)
+        sprint = get_sprint(fields)
 
         if islink:
-            return '"{}\\n({})\\nEstimate: {}\\nStatus: {}\\nAssignee: {}"'.format(issue_key, summary.encode('utf-8'),
-                                                                                   estimate, status['name'], assignee)
-        return '"{}\\n({})\\nEstimate: {}\\nStatus: {}\\nAssignee: {}" [href="{}", fillcolor="{}", style=filled]'.format(issue_key,
+            return '"{}\\n({})\\n{}\\nStatus: {}\\nEstimate: {}\\nAssignee: {}"'.format(issue_key, summary.encode('utf-8'),
+                                                                                                sprint, status['name'],
+                                                                                                estimate, assignee)
+        return '"{}\\n({})\\n{}\\nStatus: {}\\nEstimate: {}\\nAssignee: {}" [href="{}", fillcolor="{}", style=filled]'.format(issue_key,
                                                                                                           summary.encode('utf-8'),
-                                                                                                          estimate,
+                                                                                                          sprint,
                                                                                                           status['name'],
+                                                                                                          estimate,
                                                                                                           assignee,
                                                                                                           jira.get_issue_uri(issue_key),
                                                                                                           get_status_color(status))
@@ -261,6 +273,7 @@ def parse_args():
     parser.add_argument('-j', '--jira', dest='jira_url', default='http://jira.example.com', help='JIRA Base URL (with protocol)')
     parser.add_argument('-f', '--file', dest='image_file', default='issue_graph.png', help='Filename to write image to')
     parser.add_argument('-efn', '--estimate_field_name', dest='estimate_field_name', default=None, help='Name of field that contains estimate')
+    parser.add_argument('-sfn', '--sprint_field_name', dest='sprint_field_name', default=None, help='Name of field that contains sprint')
     parser.add_argument('-l', '--local', action='store_true', default=False, help='Render graphviz code to stdout')
     parser.add_argument('-e', '--ignore-epic', action='store_true', default=False, help='Don''t follow an Epic into it''s children issues')
     parser.add_argument('-x', '--exclude-link', dest='excludes', default=[], action='append', help='Exclude link type(s)')
@@ -300,11 +313,15 @@ def main():
                     else getpass.getpass('Password: ')
         auth = (user, password)
 
-    jira = JiraSearch(options.jira_url, auth, options.no_verify_ssl, options.estimate_field_name)
+    jira = JiraSearch(options.jira_url, auth, options.no_verify_ssl, options.sprint_field_name,
+                      options.estimate_field_name)
 
     graph = []
     for issue in options.issues:
-        graph = graph + build_graph_data(issue, jira, options.excludes, options.show_directions, options.directions, options.includes, options.closed, options.ignore_epic, options.ignore_subtasks, options.traverse, options.word_wrap, options.link_includes, options.estimate_field_name)
+        graph += build_graph_data(issue, jira, options.excludes, options.show_directions, options.directions,
+                                  options.includes, options.closed, options.ignore_epic, options.ignore_subtasks,
+                                  options.traverse, options.word_wrap, options.link_includes,
+                                  options.sprint_field_name, options.estimate_field_name)
 
     if options.local:
         print_graph(filter_duplicates(graph), options.node_shape)
