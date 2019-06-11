@@ -17,13 +17,20 @@ Added next cmd arguments:
 * `--sprint_field_name` - specifies field name with sprint information;
 
 
-Example of usage with docker:
+How to use:
 
+1. Install docker on your PC: 
+
+Windows: https://hub.docker.com/editions/community/docker-ce-desktop-windows
+
+Mac: https://docs.docker.com/v17.12/docker-for-mac/install/#download-docker-for-mac
+
+2. Example of usage with docker: 
 ```
-docker run -v $PWD/out:/out --rm jira python jira-dependency-graph.py --user=jirauser --password=jirapassword --jira=https://jira.myproject.com --include-only-tickets-linked-by-type 'is blocked by' --include-only-tickets-linked-by-type 'blocks' --exclude-link 'is blocked by' --ignore-subtasks --word-wrap --estimate_field_name 'customfield_10004' --sprint_field_name 'customfield_10300' --file=/out/output.png TASK-1 TASK-2 TASK-3 TASK-4
+docker run --rm shnax0210/jira-dependency-graph python jira-dependency-graph.py --user=jirauser --password=jirapassword --jira=https://jira.myproject.com --include-only-tickets-linked-by-type 'is blocked by' --include-only-tickets-linked-by-type 'blocks' --exclude-link 'is blocked by' --ignore-subtasks --word-wrap --estimate_field_name 'customfield_10004' --sprint_field_name 'customfield_10300' --local TASK-1 TASK-2 TASK-3 TASK-4 | dot -Tpng > result_graph.png
 ```
 
-To use above example please change next cmd arguments: `--user`, `--password` `--jira` and list of tickets in the end of command.
+To use above example please change next cmd arguments: `--user`, `--password` `--jira` and list of tickets(TASK-1 TASK-2 TASK-3 TASK-4). Result will placed in `result_graph.png` file to currect folder.
 
 # Original readme file:
 
