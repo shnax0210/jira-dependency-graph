@@ -30,7 +30,7 @@ Mac: https://docs.docker.com/v17.12/docker-for-mac/install/#download-docker-for-
 docker run --rm shnax0210/jira-dependency-graph python jira-dependency-graph.py --user=jirauser --password=jirapassword --jira=https://jira.myproject.com --include-only-tickets-linked-by-type 'is blocked by' --include-only-tickets-linked-by-type 'blocks' --exclude-link 'is blocked by' --ignore-subtasks --word-wrap --estimate_field_name 'customfield_10004' --sprint_field_name 'customfield_10300' --local TASK-1 TASK-2 TASK-3 TASK-4 | dot -Tpng > result_graph.png
 ```
 
-To use above example please change next cmd arguments: `--user`, `--password` `--jira` and list of tickets(TASK-1 TASK-2 TASK-3 TASK-4). Result will placed in `result_graph.png` file to currect folder.
+To use above example please change next cmd arguments: `--user`, `--password` `--jira` and list of tickets(TASK-1 TASK-2 TASK-3 TASK-4). Result will placed in `result_graph.png` file to currect folder. Also it is most likelly that your project will have another identifiers for estimate and sprint fields (since this fields are custom), so to you also need to change `-estimate_field_name 'customfield_10004' --sprint_field_name 'customfield_10300'`.
 
 # Original readme file:
 
