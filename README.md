@@ -17,7 +17,7 @@ Added next cmd arguments:
 * `--sprint_field_name` - specifies field name with sprint information;
 
 
-How to use:
+# How to use:
 
 1. Install docker on your PC: 
 
